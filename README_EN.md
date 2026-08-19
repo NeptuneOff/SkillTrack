@@ -56,7 +56,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify.ps1
 
 It covers backend lint, typing and tests; frontend tests, lint and build; the Compose Playwright profile; the live smoke test; and the benchmark unless skipped. The valid release evidence is the output and CI result attached to the exact commit being presented.
 
-Latest complete local gate on 2026-08-19: **PASS** — development/production builds and health, Alembic `20260819_03`, Ruff/mypy, backend 20/20 with no warning and 92.36% application coverage, frontend 10/10 plus build, Chromium Playwright 2/2, smoke 9/9 with cleanup, and performance 200/200 (p95 128.05 ms against a 1,000 ms threshold). Versionable evidence is indexed in [`docs/INDEX.md`](docs/INDEX.md); attach the run to the final commit hash and confirm it in CI.
+Latest complete local gate on 2026-08-19: **PASS** — development/production builds and health, Alembic `20260819_03`, Ruff/mypy, backend 20/20 with no warning and 92.32% application coverage, frontend 10/10 plus build, Chromium Playwright 2/2, smoke 9/9 with cleanup, and performance 200/200 (p95 128.05 ms against a 1,000 ms threshold). Versionable evidence is indexed in [`docs/INDEX.md`](docs/INDEX.md); attach the run to the final commit hash and confirm it in CI.
 
 ## Architecture
 

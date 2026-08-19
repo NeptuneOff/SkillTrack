@@ -56,7 +56,7 @@ Derniers résultats locaux de la branche de travail, avant rattachement au commi
 
 | Contrôle | Résultat | Portée notable |
 |---|---|---|
-| Backend PostgreSQL | **20/20 cas passants, couverture applicative 92,36 %, zéro warning pytest** | auth, CRUD, repository substitué, non-régression seed, séries, MailHog, imports/rollback, isolation, exports/round-trip, effacement, migrations/contraintes/trigger et documentation CSP |
+| Backend PostgreSQL | **20/20 cas passants, couverture applicative 92,32 %, zéro warning pytest** | auth, CRUD, repository substitué, non-régression seed, séries, MailHog, imports/rollback, isolation, exports/round-trip, effacement, migrations/contraintes/trigger et documentation CSP |
 | Frontend Vitest | **10/10 passants** | vrais composants, 401, CRUD, import/historique/exports, profil, navigation et axe |
 | Frontend qualité | **ESLint et build verts** | source et bundle de production |
 | Playwright Chromium | **2/2 scénarios passants** | jury : login/dashboard, CRUD, objectif, import/rapport, téléchargements, profil/nettoyage ; accessibilité : axe réel sur cinq vues, clavier et reflow 320 px |

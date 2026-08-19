@@ -21,7 +21,7 @@ Exécuter cette grille sur le **commit exact présenté**, après reconstruction
 | 13 | PostgreSQL réellement utilisé | service, psycopg, données persistantes | ✅ |
 | 14 | Docker Compose fonctionne | services healthy après rebuild | ✅ stack dev et simulation production isolée validées ; répéter sur machine jury |
 | 15 | README permet un lancement autonome | clone/machine vierge sans assistance | 🟠 test externe/machine vierge requis |
-| 16 | Tests couvrent fonctions principales | matrice `I_tests_recette.md`, CI | ✅ backend 20/20 à 92,36 %, frontend 10/10, E2E jury + accessibilité ; recette humaine distincte |
+| 16 | Tests couvrent fonctions principales | matrice `I_tests_recette.md`, CI | ✅ backend 20/20 à 92,32 %, frontend 10/10, E2E jury + accessibilité ; recette humaine distincte |
 | 17 | Documentation RNCP existe | annexes et matrice | ✅ |
 | 18 | Matrice indique les preuves par compétence | 36 lignes, 10/13/8/5, chemins/statuts | ✅ |
 | 19 | Matière pour défendre les 4 blocs | portfolio + preuves externes | 🟠 technique solide ; BC02 externe incomplet |

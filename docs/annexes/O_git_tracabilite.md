@@ -10,6 +10,7 @@
 | `950c41b` | 19/08/2026 22:54 | fiabilisation backend et échanges de données | migrations, sécurité, import/export, isolation et tests PostgreSQL |
 | `ce54773` | 19/08/2026 22:54 | fiabilisation interface et parcours jury | composants réels, accessibilité, navigation et E2E Chromium |
 | `1201985` | 19/08/2026 22:54 | durcissement livraison et recette | Compose dev/prod, CI, scripts, sauvegarde, smoke et performance |
+| `8e2e48d` | 19/08/2026 23:01 | correction des alertes CodeQL de l'import | rapport CSV sans texte brut d'exception et non-régression CSP sans faux positif |
 
 Branche de travail : `agent/rncp-ready-skilltrack`. Pull request : GitHub `NeptuneOff/SkillTrack#1`, créée en brouillon afin de ne pas fusionner avant contrôle. Au moment de cette preuve, `main` pointe encore sur l'état initial ; vérifier à nouveau avant la soutenance.
 
@@ -39,4 +40,4 @@ Pour le dossier final : graphe Git avec dates, PR et diff, résultat CI du commi
 
 ## 5. Limite
 
-L'historique comporte un gros commit de refonte initial, moins lisible qu'une suite d'incréments. Les corrections finales ont ensuite été séparées en lots backend, frontend, livraison et preuves RNCP. Le commit documentaire qui contient cette annexe est identifiable par son objet `Aligne les preuves sur le référentiel RNCP36463` et par la PR ; son propre hash ne peut pas être inscrit dans son contenu sans créer une référence circulaire.
+L'historique comporte un gros commit de refonte initial, moins lisible qu'une suite d'incréments. Les corrections finales ont ensuite été séparées en lots backend, frontend, livraison, preuves RNCP et sécurité CI. Le commit documentaire qui contient cette annexe est identifiable par son objet et par la PR ; son propre hash ne peut pas être inscrit dans son contenu sans créer une référence circulaire.
