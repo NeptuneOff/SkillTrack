@@ -1,0 +1,9 @@
+from typing import Protocol, TypeVar
+
+T = TypeVar("T")
+
+
+class Repository(Protocol[T]):
+    def get(self, item_id: str) -> T | None: ...
+    def add(self, item: T) -> T: ...
+    def delete(self, item: T) -> None: ...

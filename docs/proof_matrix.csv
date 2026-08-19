@@ -1,0 +1,37 @@
+competence,primary_evidence,secondary_evidence,priority,status
+BC01-C1,docs/functional/SPECIFICATION.md,docs/functional/USER_RESEARCH.md,high,to_complete
+BC01-C2,docs/quality/PAQ.md,CI lint reports,high,ready_to_execute
+BC01-C3,docs/architecture/C4_CONTEXT.md,docs/adr/0001-modular-monolith.md,high,ready_to_update
+BC01-C4,backend/app/repositories,backend/tests/test_workouts.py,high,implemented
+BC01-C5,docs/evidence/BUG_TEMPLATE.md,CI non regression,high,to_capture
+BC01-C6,docs/performance/PERFORMANCE_PROTOCOL.md,locustfile.py,medium,to_execute
+BC01-C7,docs/accessibility/RGAA_AUDIT.md,axe Lighthouse report,high,to_execute
+BC01-C8,docs/security/RISK_REGISTER.md,security tests,high,to_execute
+BC01-C9,backend/app/services,Radon report,high,implemented
+BC01-C10,backend/app/models.py,integrity tests,high,partly_implemented
+BC02-C1,docs/company/P1_PROCESS_PROCEDURE.md,tutor validation,critical,to_validate
+BC02-C2,docs/company/P2_REENGINEERING.md,ASIS TOBE measures,critical,to_measure
+BC02-C3,docs/company/P3_DOCUMENT_FLOW.md,BPMN,high,to_complete
+BC02-C4,docs/data/DATA_MODEL.md,migrations,high,to_complete
+BC02-C5,docs/company/P4_URBANIZATION.md,referent validation,critical,to_validate
+BC02-C6,docs/company/P5_REUSE_DECISION.md,collective decision,critical,to_validate
+BC02-C7,docs/project/PLANNING.md,GitHub Projects,high,to_follow
+BC02-C8,docs/project/AGILE_COORDINATION.md,collective project proof,critical,to_recover
+BC02-C9,docs/testing/ACCEPTANCE.md,signed acceptance,critical,to_execute
+BC02-C10,docs/presentation/PRESENTATION_PLAN.md,feedback,high,to_execute
+BC02-C11,docs/itil/INTEGRATION_PROCEDURE.md,rollback logs,critical,to_execute
+BC02-C12,docs/collaboration/COLLABORATION.md,PR review,high,to_capture
+BC02-C13,README_EN.md,english pitch,high,to_review
+BC03-C1,docs/evidence/TECHNICAL_SPIKE.md,official sources,high,to_capture
+BC03-C2,docs/algorithms/IMPORT_DECOMPOSITION.md,tests import,high,ready
+BC03-C3,docs/algorithms/VOLUME_ALGORITHM.md,stats code tests,high,implemented
+BC03-C4,docs/company/S3_ALGORITHM_EVOLUTION.md,diff validation,critical,to_validate
+BC03-C5,docs/evidence/BUG_TEMPLATE.md,bug fix commit,high,to_capture
+BC03-C6,docs/sustainability/RSE_METRICS.md,MailHog integration tests,critical,to_measure
+BC03-C7,backend/tests,coverage report,high,implemented
+BC03-C8,docs/project/WEEKLY_REPORT_TEMPLATE.md,weekly exports,critical,to_follow
+BC04-C1,docs/company/U_RETRO_DOCUMENTATION.md,referent validation,critical,to_validate
+BC04-C2,docs/import_export/MAPPING.md,sample files,high,ready
+BC04-C3,docs/privacy/RGPD_REGISTER.md,aggregate tests,high,to_execute
+BC04-C4,backend/app/services/import_service.py,export_service.py,critical,implemented
+BC04-C5,scripts/setup.sh scripts/setup.ps1,CI logs,critical,implemented
