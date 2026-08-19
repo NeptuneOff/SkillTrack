@@ -1,5 +1,7 @@
 from datetime import date, datetime
-from pydantic import BaseModel, EmailStr, Field
+from typing import Self
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 class Token(BaseModel):
     access_token: str
@@ -9,12 +11,20 @@ class LoginIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8)
 
+    @field_validator("password")
+    @classmethod
+    def enforce_bcrypt_byte_limit(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Le mot de passe ne peut pas dépasser 72 octets UTF-8.")
+        return value
+
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     email: EmailStr
     display_name: str
     created_at: datetime
-    class Config: from_attributes = True
 
 class SetIn(BaseModel):
     exercise: str = Field(min_length=2, max_length=160)
@@ -28,19 +38,22 @@ class SetIn(BaseModel):
     notes: str = Field(default="", max_length=2000)
 
 class SetOut(SetIn):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
-    class Config: from_attributes = True
 
 class WorkoutIn(BaseModel):
     title: str = Field(min_length=2, max_length=160)
     date: date
-    type: str = "Technique"
+    type: str = Field(default="Technique", min_length=2, max_length=80)
     intensity: int = Field(default=6, ge=1, le=10)
     duration_minutes: int = Field(default=60, ge=1, le=1440)
     notes: str = Field(default="", max_length=4000)
-    sets: list[SetIn] = Field(default_factory=list, min_length=1)
+    sets: list[SetIn] = Field(default_factory=list)
 
 class WorkoutOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     title: str
     date: date
@@ -50,7 +63,6 @@ class WorkoutOut(BaseModel):
     notes: str
     sets: list[SetOut] = Field(default_factory=list)
     volume: float
-    class Config: from_attributes = True
 
 class GoalIn(BaseModel):
     skill: str = Field(min_length=2, max_length=120)
@@ -66,9 +78,15 @@ class GoalIn(BaseModel):
     deadline: date | None = None
     is_done: bool = False
 
+    @model_validator(mode="after")
+    def keep_completion_fields_consistent(self) -> Self:
+        self.is_done = self.status == "termine"
+        return self
+
 class GoalOut(GoalIn):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
-    class Config: from_attributes = True
 
 class DashboardOut(BaseModel):
     workout_count: int
