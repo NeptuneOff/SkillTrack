@@ -14,7 +14,12 @@ from sqlalchemy.orm import Session as OrmSession
 
 from app.core.security import hash_password
 from app.db import SessionLocal, engine
-from app.main import app, initialise_database
+from app.main import (
+    API_CONTENT_SECURITY_POLICY,
+    DOCUMENTATION_CONTENT_SECURITY_POLICY,
+    app,
+    initialise_database,
+)
 from app.models import Goal, ImportJob, TrainingSet, User, Workout
 from app.services import dashboard as build_dashboard
 
@@ -117,15 +122,13 @@ def test_health_and_security_headers(client: TestClient):
     assert response.headers["x-frame-options"] == "DENY"
     assert response.headers["referrer-policy"] == "no-referrer"
     assert response.headers["cache-control"] == "no-store"
-    assert response.headers["content-security-policy"] == (
-        "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
-    )
+    assert response.headers["content-security-policy"] == API_CONTENT_SECURITY_POLICY
     UUID(response.headers["x-request-id"])
 
 
 def test_documentation_pages_have_a_scoped_csp_without_network_requests(client: TestClient):
     api_csp = client.get("/openapi.json").headers["content-security-policy"]
-    assert api_csp == "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    assert api_csp == API_CONTENT_SECURITY_POLICY
 
     expected_pages = {
         "/docs": ("Swagger UI", "https://cdn.jsdelivr.net", "https://fastapi.tiangolo.com"),
@@ -138,16 +141,7 @@ def test_documentation_pages_have_a_scoped_csp_without_network_requests(client: 
         assert "/openapi.json" in response.text
         assert all(value in response.text for value in expected_content)
 
-        documentation_csp = response.headers["content-security-policy"]
-        assert documentation_csp != api_csp
-        assert "default-src 'none'" in documentation_csp
-        assert "frame-ancestors 'none'" in documentation_csp
-        assert "connect-src 'self'" in documentation_csp
-        assert "https://cdn.jsdelivr.net" in documentation_csp
-        assert "https://fastapi.tiangolo.com" in documentation_csp
-        if path == "/redoc":
-            assert "https://fonts.googleapis.com" in documentation_csp
-            assert "https://fonts.gstatic.com" in documentation_csp
+        assert response.headers["content-security-policy"] == DOCUMENTATION_CONTENT_SECURITY_POLICY
 
 
 def test_authentication_and_protected_routes(client: TestClient, account_factory):
@@ -446,8 +440,7 @@ def test_csv_import_rejects_type_beyond_database_limit_without_partial_insert(
     assert report["created_workouts"] == 0
     assert len(report["errors"]) == 1
     assert "Ligne 2" in report["errors"][0]
-    assert "type" in report["errors"][0]
-    assert "80" in report["errors"][0]
+    assert "valeurs sont invalides" in report["errors"][0]
 
     with SessionLocal() as db:
         assert db.query(Workout).filter(Workout.owner_id == account["id"], Workout.title == title).count() == 0

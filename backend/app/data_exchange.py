@@ -345,12 +345,10 @@ def _goal_data(row: dict[str, str | None]) -> GoalIn:
     )
 
 
-def _validation_message(line_no: int, error: ValidationError) -> str:
-    details = []
-    for item in error.errors(include_url=False, include_input=False):
-        field_name = ".".join(str(part) for part in item["loc"])
-        details.append(f"{field_name}: {item['msg']}")
-    return f"Ligne {line_no} : {' ; '.join(details)}"
+def _validation_message(line_no: int, _: ValidationError) -> str:
+    # Never expose exception text to the client: validator messages may contain
+    # implementation details. The line number remains actionable in the report.
+    return f"Ligne {line_no} : une ou plusieurs valeurs sont invalides."
 
 
 def _metadata_matches(left: dict[str, Any], right: dict[str, Any]) -> bool:
@@ -437,11 +435,11 @@ def parse_csv_import(decoded: str) -> CsvImportPlan:
             except ValidationError as exc:
                 plan.rejected_rows += 1
                 plan.errors.append(_validation_message(line_no, exc))
-            except (TypeError, ValueError) as exc:
+            except (TypeError, ValueError):
                 plan.rejected_rows += 1
-                plan.errors.append(f"Ligne {line_no} : {exc}.")
+                plan.errors.append(f"Ligne {line_no} : valeur ou structure invalide.")
     except csv.Error as exc:
-        raise ValueError(f"Structure CSV invalide à proximité de la ligne {reader.line_num} : {exc}") from exc
+        raise ValueError(f"Structure CSV invalide à proximité de la ligne {reader.line_num}.") from exc
 
     if not saw_data_row:
         raise ValueError("Le fichier CSV ne contient aucune ligne de données.")
