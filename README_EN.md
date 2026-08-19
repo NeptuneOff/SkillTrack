@@ -1,76 +1,43 @@
-# SkillTrack Calisthenics
+# SkillTrack — Calisthenics Progress Tracker
 
-SkillTrack is a full-stack training log application focused on calisthenics. It provides authentication, workout tracking, skill progression, CSV import, JSON/CSV export, statistics, tests, Docker, CI and RNCP evidence documentation.
+SkillTrack is a full-stack web application for tracking calisthenics training sessions, exercises, sets and skill progression. It is designed as a demonstrable technical project for a level-6 application development portfolio.
+
+## Delivered features
+
+- JWT authentication.
+- Demo user seeded at startup.
+- Dashboard with global and weekly metrics.
+- Complete workout CRUD.
+- Exercise/set tracking with automatic volume calculation.
+- Goal tracking and skill progress.
+- CSV import with validation report.
+- CSV and JSON export.
+- User profile with data export and deletion workflow.
+- Swagger API documentation.
+- Docker Compose stack: React frontend, FastAPI backend, PostgreSQL and MailHog.
+- Backend and frontend tests.
+- Project documentation in `/docs`.
 
 ## Quick start
 
 ```bash
-git clone https://github.com/NeptuneOff/SkillTrack.git
-cd SkillTrack
 cp .env.example .env
 docker compose up --build
 ```
 
-Available services:
+URLs:
 
 - Frontend: http://localhost:5173
-- API: http://localhost:8000
 - Swagger: http://localhost:8000/docs
-- Healthcheck: http://localhost:8000/health
-- PostgreSQL: localhost:5432
 - MailHog: http://localhost:8025
 
 Demo account:
 
-- Email: demo@skilltrack.local
-- Password: DemoPassword123!
+- Email: `demo@skilltrack.dev`
+- Password: `DemoPassword123!`
 
-## Project goal
+## Jury demonstration
 
-The goal is to replace a manual and fragmented training log with a structured web application. The application stores sessions, exercises, sets and progression records. It helps users understand their training history and export their own data.
+Start the stack, sign in, inspect the real dashboard data, create/edit/delete a workout, add and remove an exercise, manage a measurable goal, import the sample CSV and inspect its report, download the authenticated CSV/JSON exports, then show Swagger, tests and the RNCP evidence matrix. Known limitations are recorded in `docs/rncp/CONTROLE_FINAL.md` and `docs/rncp/MATRICE_COMPETENCES_RNCP.md`.
 
-## Technical stack
-
-- Backend: Python, FastAPI, SQLAlchemy, Pydantic, PostgreSQL
-- Frontend: React, TypeScript, Vite
-- Tests: pytest, coverage, Vitest
-- Quality: Ruff, mypy, ESLint, Prettier
-- Deployment: Docker, Docker Compose, GitHub Actions
-- External service for integration proof: MailHog SMTP test service
-
-## Main commands
-
-```bash
-# Start the stack
-docker compose up --build
-
-# Backend tests
-docker compose run --rm backend pytest -q --cov=app --cov-report=term-missing
-
-# Backend lint
-docker compose run --rm backend ruff check app tests
-
-# Frontend tests
-docker compose run --rm frontend npm test -- --run
-
-# Linux/macOS reproducible setup
-./scripts/setup.sh
-
-# Windows reproducible setup
-./scripts/setup.ps1
-```
-
-## API overview
-
-- `POST /auth/register` creates a user.
-- `POST /auth/login` returns a JWT access token.
-- `GET /workouts` lists the authenticated user's workouts.
-- `POST /workouts` creates a workout.
-- `GET /stats/weekly-volume` returns weekly volume aggregates.
-- `POST /imports/workouts` imports a CSV file.
-- `GET /exports/workouts.csv` exports user-owned data as CSV.
-- `GET /exports/workouts.json` exports user-owned data as JSON.
-
-## Evidence mindset
-
-The repository is designed to produce verifiable evidence: source code, tests, CI reports, Docker scripts, architecture decisions, risk register, RGPD register, RGAA checklist, RSE metrics and ITIL integration procedure. Each important claim in the RNCP portfolio must be linked to a real file, a command output, a date and a commit.
+The backend intentionally pins `bcrypt==4.0.1` for Passlib compatibility. The frontend Docker image uses Node 22.

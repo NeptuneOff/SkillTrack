@@ -1,32 +1,6 @@
 {
-  "name": "skilltrack-frontend",
-  "version": "0.1.0",
-  "private": true,
   "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "test": "vitest"
-  },
-  "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "lucide-react": "latest"
-  },
-  "devDependencies": {
-    "@testing-library/react": "latest",
-    "@testing-library/jest-dom": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "eslint": "latest",
-    "@typescript-eslint/eslint-plugin": "latest",
-    "@typescript-eslint/parser": "latest",
-    "vitest": "latest",
-    "jsdom": "latest"
-  }
+  "scripts": {"dev":"vite", "build":"vite build", "test":"vitest --environment jsdom", "lint":"eslint src --max-warnings=0"},
+  "dependencies": {"@vitejs/plugin-react":"latest", "vite":"latest", "typescript":"latest", "react":"latest", "react-dom":"latest", "lucide-react":"latest"},
+  "devDependencies": {"vitest":"latest", "jsdom":"latest", "@testing-library/react":"latest", "@testing-library/jest-dom":"latest", "@testing-library/user-event":"latest", "eslint":"^9.0.0", "@eslint/js":"^9.0.0", "eslint-plugin-react-hooks":"latest", "eslint-plugin-react-refresh":"latest", "globals":"latest"}
 }

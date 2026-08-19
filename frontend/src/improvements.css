@@ -1,0 +1,8 @@
+label{display:flex;flex-direction:column;gap:6px;color:#cfe3e6;font-size:13px;font-weight:700}
+select{width:100%;background:#08191e;border:1px solid #2e5961;color:#e9fbff;border-radius:12px;padding:11px}
+.exercise{border:1px solid #2e5961;border-radius:18px;padding:16px;margin:8px 0}
+.exercise legend{padding:0 8px;color:#75f3d1;font-weight:800}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #7fffd4;outline-offset:2px}
+button:disabled{opacity:.55;cursor:not-allowed}
+.goal{display:flex;justify-content:space-between;gap:18px;border-top:1px solid #203f47;padding:18px 0}.goal>div:first-child{flex:1}.progress{height:10px;background:#07181d;border-radius:999px;overflow:hidden;margin:10px 0}.progress span{display:block;height:100%;background:linear-gradient(90deg,#67ffd6,#3bb4ff)}.empty{text-align:center;color:#9bb8bd;padding:28px}
+@media(max-width:900px){.exercise{padding:12px}}

@@ -2,58 +2,59 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-skilltrack}
       POSTGRES_USER: ${POSTGRES_USER:-skilltrack}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skilltrack}
+      POSTGRES_DB: ${POSTGRES_DB:-skilltrack}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/sql:/docker-entrypoint-initdb.d:ro
+      - ./infra/postgres/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-skilltrack} -d ${POSTGRES_DB:-skilltrack}"]
       interval: 5s
       timeout: 5s
-      retries: 20
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://skilltrack:skilltrack@db:5432/skilltrack
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/tests:/app/tests
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  frontend:
+    build: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
 
   mailhog:
     image: mailhog/mailhog:v1.0.1
     ports:
       - "1025:1025"
       - "8025:8025"
-
-  backend:
-    build: ./backend
-    env_file: .env
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
-    depends_on:
-      db:
-        condition: service_healthy
-      mailhog:
-        condition: service_started
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-
-  frontend:
-    build: ./frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    environment:
-      VITE_API_URL: http://localhost:8000
-    depends_on:
-      backend:
-        condition: service_healthy
-    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 
 volumes:
   postgres_data:
