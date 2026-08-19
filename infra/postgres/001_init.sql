@@ -1,7 +1,3 @@
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = NOW();
-   RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- The application schema, constraints, indexes and triggers are versioned by
+-- Alembic in backend/app/alembic. This init hook is deliberately side-effect
+-- free so a fresh database and an upgraded database follow the same path.

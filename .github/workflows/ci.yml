@@ -4,10 +4,24 @@ on:
   push:
     branches: [main, develop]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
 
 jobs:
   backend:
+    name: Backend quality and PostgreSQL tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -18,43 +32,157 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
+          --health-cmd "pg_isready -U skilltrack -d skilltrack_test"
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
     env:
       DATABASE_URL: postgresql+psycopg://skilltrack:skilltrack@localhost:5432/skilltrack_test
-      SECRET_KEY: ci-secret
+      SECRET_KEY: ci-only-secret-key-with-at-least-32-characters
       BACKEND_CORS_ORIGINS: http://localhost:5173
+      DEMO_EMAIL: demo@skilltrack.dev
+      DEMO_PASSWORD: DemoPassword123!
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - name: Install backend
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.lock
+            backend/requirements-dev.lock
+      - name: Install backend and development tools
         run: |
-          cd backend
-          python -m pip install --upgrade pip
-          pip install -e .[dev]
+          python -m pip install -r requirements-dev.lock
+          python -m pip install --no-deps -e .
+          python -m pip check
+      - name: Validate migrations on PostgreSQL
+        run: |
+          alembic -c app/alembic.ini upgrade head
+          alembic -c app/alembic.ini current --check-heads
       - name: Lint
-        run: cd backend && ruff check app tests
+        run: ruff check app tests
       - name: Type check
-        run: cd backend && mypy app
-      - name: Tests
-        run: cd backend && pytest -q --cov=app --cov-report=xml --cov-report=term-missing
+        run: mypy app
+      - name: Tests and application coverage
+        run: >-
+          pytest -q
+          --cov=app
+          --cov-fail-under=90
+          --cov-report=term-missing
+          --cov-report=xml:coverage.xml
+          --cov-report=html:htmlcov
+          --junitxml=test-results.xml
+      - name: Upload backend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/coverage.xml
+            backend/htmlcov/
+            backend/test-results.xml
+          if-no-files-found: warn
+          retention-days: 14
 
   frontend:
+    name: Frontend lint, unit tests and build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - name: Install frontend
-        run: cd frontend && npm ci || npm install
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked frontend dependencies
+        run: npm ci
       - name: Lint
-        run: cd frontend && npm run lint
-      - name: Tests
-        run: cd frontend && npm test -- --run
-      - name: Build
-        run: cd frontend && npm run build
+        run: npm run lint
+      - name: Unit and accessibility tests
+        run: >-
+          npm test -- --run
+          --reporter=default
+          --reporter=junit
+          --outputFile.junit=unit-junit.xml
+      - name: Production build
+        run: npm run build
+      - name: Upload frontend reports and bundle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-test-and-build
+          path: |
+            frontend/unit-junit.xml
+            frontend/dist/
+          if-no-files-found: warn
+          retention-days: 14
+
+  integrated:
+    name: Docker Compose, smoke, E2E and performance
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Prepare local integration environment
+        run: |
+          cp .env.example .env
+          mkdir -p artifacts/ci
+      - name: Validate development and production Compose models
+        run: |
+          docker compose config --quiet
+          docker compose --file docker-compose.prod.yml config --quiet
+      - name: Build production targets
+        run: docker compose --file docker-compose.prod.yml build backend frontend
+      - name: Start development stack
+        run: docker compose up --build --detach --wait --wait-timeout 180 --remove-orphans
+      - name: Prove PostgreSQL migration state
+        run: |
+          docker compose exec -T db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" --set ON_ERROR_STOP=1 -Atc "SELECT current_database(), version();"'
+          docker compose exec -T backend alembic -c app/alembic.ini current --check-heads
+      - name: Run API smoke and cleanup scenario
+        run: >-
+          python scripts/smoke_test.py
+          --mailhog-url http://localhost:8025
+          --output artifacts/ci/smoke.json
+      - name: Run reproducible performance gate
+        run: >-
+          python scripts/performance_test.py
+          --users 10
+          --requests 100
+          --warmup 5
+          --min-success-rate 99
+          --max-p95-ms 1000
+          --output artifacts/ci/performance.json
+      - name: Run browser jury journey
+        run: docker compose --profile test run --rm e2e
+      - name: Capture Compose diagnostics
+        if: always()
+        run: |
+          docker compose ps --all > artifacts/ci/compose-ps.txt
+          docker compose logs --no-color --timestamps > artifacts/ci/compose.log
+      - name: Upload integrated evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integrated-test-evidence
+          path: |
+            artifacts/ci/
+            frontend/playwright-report/
+            frontend/test-results/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Stop integration stack
+        if: always()
+        run: docker compose --profile test down --volumes --remove-orphans

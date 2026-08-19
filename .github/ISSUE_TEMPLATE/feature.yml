@@ -1,0 +1,28 @@
+name: Évolution
+description: Proposer une évolution traçable depuis le besoin jusqu'à la recette.
+title: "[Évolution] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Besoin utilisateur
+      placeholder: "En tant que…, je veux…, afin de…"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critères d'acceptation mesurables
+    validations:
+      required: true
+  - type: textarea
+    id: risks
+    attributes:
+      label: Risques, sécurité, RGPD et accessibilité
+    validations:
+      required: true
+  - type: input
+    id: rncp
+    attributes:
+      label: Compétence RNCP associée
