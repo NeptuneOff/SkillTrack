@@ -1,6 +1,35 @@
 {
+  "name": "skilltrack-frontend",
+  "version": "1.0.0",
+  "private": true,
   "type": "module",
-  "scripts": {"dev":"vite", "build":"vite build", "test":"vitest --environment jsdom", "lint":"eslint src --max-warnings=0"},
-  "dependencies": {"@vitejs/plugin-react":"latest", "vite":"latest", "typescript":"latest", "react":"latest", "react-dom":"latest", "lucide-react":"latest"},
-  "devDependencies": {"vitest":"latest", "jsdom":"latest", "@testing-library/react":"latest", "@testing-library/jest-dom":"latest", "@testing-library/user-event":"latest", "eslint":"^9.0.0", "@eslint/js":"^9.0.0", "eslint-plugin-react-hooks":"latest", "eslint-plugin-react-refresh":"latest", "globals":"latest"}
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest --environment jsdom --config vitest.config.js",
+    "test:e2e": "playwright test",
+    "lint": "eslint src e2e *.config.js --max-warnings=0"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "6.0.5",
+    "lucide-react": "1.33.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "typescript": "7.0.2",
+    "vite": "8.2.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "1.62.1",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.5",
+    "axe-core": "4.13.0",
+    "eslint": "9.39.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "eslint-plugin-react-refresh": "0.5.4",
+    "globals": "17.11.0",
+    "jsdom": "30.0.1",
+    "vitest": "4.1.11"
+  }
 }

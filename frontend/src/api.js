@@ -1,11 +1,20 @@
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export class ApiError extends Error {
-  constructor(message, status, details) { super(message); this.status = status; this.details = details; }
+  constructor(message, status, details) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.details = details;
+  }
 }
 
 function readableError(payload, status) {
-  if (Array.isArray(payload?.detail)) return payload.detail.map(e => `${e.loc?.slice(-1)[0] || 'champ'} : ${e.msg}`).join(' · ');
+  if (Array.isArray(payload?.detail)) {
+    return payload.detail
+      .map((error) => `${error.loc?.slice(-1)[0] || 'champ'} : ${error.msg}`)
+      .join(' · ');
+  }
   return payload?.detail || payload?.message || `Erreur HTTP ${status}`;
 }
 
@@ -28,8 +37,15 @@ export async function api(path, options = {}) {
     const blob = await response.blob();
     const disposition = response.headers.get('content-disposition') || '';
     const filename = disposition.match(/filename=([^;]+)/)?.[1]?.replaceAll('"', '') || 'skilltrack-export';
-    const url = URL.createObjectURL(blob); const link = document.createElement('a');
-    link.href = url; link.download = filename; link.click(); URL.revokeObjectURL(url); return;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    return null;
   }
   return response.status === 204 ? null : response.json();
 }
