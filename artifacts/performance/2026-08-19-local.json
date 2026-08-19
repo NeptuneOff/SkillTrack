@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "measured_at_utc": "2026-08-19T19:49:33.277720+00:00",
+  "environment": {
+    "platform": "Windows-11-10.0.26200-SP0",
+    "python": "3.14.6",
+    "logical_cpu_count": 16,
+    "base_url": "http://localhost:8000",
+    "endpoint": "/dashboard"
+  },
+  "scenario": {
+    "concurrent_users": 20,
+    "requests": 200,
+    "warmup_requests": 5,
+    "read_only": true
+  },
+  "thresholds": {
+    "minimum_success_rate_percent": 99,
+    "maximum_p95_ms": 1000
+  },
+  "results": {
+    "passed": true,
+    "successes": 200,
+    "failures": 0,
+    "success_rate_percent": 100.0,
+    "elapsed_seconds": 0.964,
+    "throughput_requests_per_second": 207.57,
+    "latency_ms": {
+      "minimum": 24.53,
+      "mean": 93.49,
+      "median": 92.84,
+      "p95": 114.65,
+      "p99": 141.1,
+      "maximum": 147.61
+    },
+    "errors": []
+  }
+}
