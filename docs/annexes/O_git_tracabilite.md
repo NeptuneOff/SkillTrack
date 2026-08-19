@@ -11,6 +11,7 @@
 | `ce54773` | 19/08/2026 22:54 | fiabilisation interface et parcours jury | composants réels, accessibilité, navigation et E2E Chromium |
 | `1201985` | 19/08/2026 22:54 | durcissement livraison et recette | Compose dev/prod, CI, scripts, sauvegarde, smoke et performance |
 | `8e2e48d` | 19/08/2026 23:01 | correction des alertes CodeQL de l'import | rapport CSV sans texte brut d'exception et non-régression CSP sans faux positif |
+| `a5b79c0` | 19/08/2026 23:07 | actualisation des actions GitHub officielles | runtimes Node maintenus et CodeQL v4 afin d'éliminer les avertissements de dépréciation |
 
 Branche de travail : `agent/rncp-ready-skilltrack`. Pull request : GitHub `NeptuneOff/SkillTrack#1`, créée en brouillon afin de ne pas fusionner avant contrôle. Au moment de cette preuve, `main` pointe encore sur l'état initial ; vérifier à nouveau avant la soutenance.
 
