@@ -1,31 +1,24 @@
 from datetime import date, datetime
-from typing import Annotated
+from typing import Self
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-
-PositiveInt = Annotated[int, Field(ge=0, le=10_000)]
-LoadKg = Annotated[float, Field(ge=0, le=500)]
-
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-
-class UserCreate(BaseModel):
+class LoginIn(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=10, max_length=128)
-    display_name: str = Field(min_length=2, max_length=120)
+    password: str = Field(min_length=8)
 
     @field_validator("password")
     @classmethod
-    def strong_enough(cls, value: str) -> str:
-        if value.lower() == value or value.upper() == value or not any(char.isdigit() for char in value):
-            raise ValueError("Password must include uppercase, lowercase and digit")
+    def enforce_bcrypt_byte_limit(cls, value: str) -> str:
+        if len(value.encode("utf-8")) > 72:
+            raise ValueError("Le mot de passe ne peut pas dépasser 72 octets UTF-8.")
         return value
 
-
-class UserRead(BaseModel):
+class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: str
@@ -33,99 +26,77 @@ class UserRead(BaseModel):
     display_name: str
     created_at: datetime
 
+class SetIn(BaseModel):
+    exercise: str = Field(min_length=2, max_length=160)
+    category: str = Field(default="autre", max_length=40)
+    set_count: int = Field(default=1, ge=1, le=50)
+    reps: int = Field(default=0, ge=0, le=1000)
+    load_kg: float = Field(default=0, ge=0, le=1000)
+    duration_seconds: int = Field(default=0, ge=0, le=86400)
+    difficulty: int = Field(default=5, ge=1, le=10)
+    assistance_kg: float = Field(default=0, ge=0, le=1000)
+    notes: str = Field(default="", max_length=2000)
 
-class LoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-
-
-class ExerciseSetCreate(BaseModel):
-    reps: PositiveInt
-    external_load_kg: LoadKg = 0
-    hold_seconds: int | None = Field(default=None, ge=0, le=600)
-    rpe: int | None = Field(default=None, ge=1, le=10)
-
-
-class ExerciseSetRead(ExerciseSetCreate):
+class SetOut(SetIn):
     model_config = ConfigDict(from_attributes=True)
+
     id: str
 
+class WorkoutIn(BaseModel):
+    title: str = Field(min_length=2, max_length=160)
+    date: date
+    type: str = Field(default="Technique", min_length=2, max_length=80)
+    intensity: int = Field(default=6, ge=1, le=10)
+    duration_minutes: int = Field(default=60, ge=1, le=1440)
+    notes: str = Field(default="", max_length=4000)
+    sets: list[SetIn] = Field(default_factory=list)
 
-class WorkoutExerciseCreate(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
-    variation: str | None = Field(default=None, max_length=120)
-    position: int = Field(default=0, ge=0, le=100)
-    sets: list[ExerciseSetCreate] = Field(default_factory=list)
-
-
-class WorkoutExerciseRead(BaseModel):
+class WorkoutOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    id: str
-    name: str
-    variation: str | None
-    position: int
-    sets: list[ExerciseSetRead]
 
-
-class WorkoutCreate(BaseModel):
-    title: str = Field(min_length=1, max_length=160)
-    performed_on: date
-    notes: str | None = Field(default=None, max_length=2000)
-    exercises: list[WorkoutExerciseCreate] = Field(default_factory=list)
-
-
-class WorkoutUpdate(BaseModel):
-    title: str | None = Field(default=None, min_length=1, max_length=160)
-    performed_on: date | None = None
-    notes: str | None = Field(default=None, max_length=2000)
-
-
-class WorkoutRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     id: str
     title: str
-    performed_on: date
-    notes: str | None
-    exercises: list[WorkoutExerciseRead]
+    date: date
+    type: str
+    intensity: int
+    duration_minutes: int
+    notes: str
+    sets: list[SetOut] = Field(default_factory=list)
+    volume: float
 
+class GoalIn(BaseModel):
+    skill: str = Field(min_length=2, max_length=120)
+    goal_type: str = Field(default="figure", max_length=40)
+    target: str = Field(min_length=2, max_length=160)
+    current_level: str = Field(default="Début", max_length=160)
+    current_value: float = Field(default=0, ge=0)
+    target_value: float = Field(default=1, gt=0)
+    unit: str = Field(default="autre", max_length=40)
+    priority: str = Field(default="moyenne", pattern="^(basse|moyenne|haute)$")
+    notes: str = Field(default="", max_length=2000)
+    status: str = Field(default="actif", pattern="^(actif|termine|archive)$")
+    deadline: date | None = None
+    is_done: bool = False
 
-class SkillProgressCreate(BaseModel):
-    skill_name: str = Field(min_length=1, max_length=120)
-    variation: str | None = Field(default=None, max_length=120)
-    measured_on: date
-    hold_seconds: int | None = Field(default=None, ge=0, le=600)
-    quality_score: int | None = Field(default=None, ge=1, le=10)
-    notes: str | None = Field(default=None, max_length=2000)
+    @model_validator(mode="after")
+    def keep_completion_fields_consistent(self) -> Self:
+        self.is_done = self.status == "termine"
+        return self
 
-
-class SkillProgressRead(SkillProgressCreate):
+class GoalOut(GoalIn):
     model_config = ConfigDict(from_attributes=True)
+
     id: str
 
-
-class WeeklyVolumePoint(BaseModel):
-    week: str
-    exercise_name: str
-    total_sets: int
-    total_reps: int
-    external_volume_kg: float
-
-
-class ImportPreviewRow(BaseModel):
-    row_number: int
-    valid: bool
-    errors: list[str] = Field(default_factory=list)
-
-
-class ImportResult(BaseModel):
-    mode: str
-    job_id: str | None = None
-    rows_read: int
-    rows_accepted: int
-    rows_rejected: int
-    errors: list[dict[str, object]] = Field(default_factory=list)
-
-
-class ExportBundle(BaseModel):
-    workouts: list[WorkoutRead]
-    generated_at: datetime
+class DashboardOut(BaseModel):
+    workout_count: int
+    set_count: int
+    total_volume: float
+    total_duration_minutes: int
+    average_intensity: float
+    weekly_volume: list[dict]
+    recent_workouts: list[WorkoutOut]
+    goals: list[GoalOut]
+    exercise_count: int
+    last_workout: WorkoutOut | None
+    recent_progress_percent: float

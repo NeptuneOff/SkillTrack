@@ -1,140 +1,182 @@
-# SkillTrack Calisthenics
+# SkillTrack — suivi de progression en calisthénie
 
-SkillTrack est une application web de suivi d'entraînement orientée calisthénie. Le projet couvre un MVP complet : authentification, gestion des séances, séries, progression sur les skills, import CSV, export JSON/CSV, statistiques, sécurité, tests, Docker, CI et documentation de preuves RNCP 36463.
+SkillTrack est une application web complète de suivi d'entraînement : séances et exercices, objectifs mesurables, statistiques, import CSV, exports CSV/JSON et droits RGPD. Elle constitue un démonstrateur technique et un portefeuille de preuves pour le titre **Concepteur développeur d'applications numériques, RNCP 36463, niveau 6**.
 
-## Lancer le projet rapidement
+## Ce qui est livré
+
+- authentification JWT et compte de démonstration ;
+- dashboard calculé depuis PostgreSQL ;
+- création, consultation, modification et suppression des séances ;
+- ajout/suppression d'exercices avec séries, répétitions, charge, assistance et maintien ;
+- objectifs créables, modifiables, terminables, réouvrables et supprimables ;
+- import CSV UTF-8 limité à 2 Mo, rapport d'erreurs et historique ;
+- exports CSV et JSON authentifiés ;
+- profil, portabilité et effacement du compte ;
+- notification de fin d'objectif visible dans MailHog en développement ;
+- API Swagger, migrations Alembic, dépendances Python/Node verrouillées, stack Docker Compose, CI, tests backend/frontend/E2E et benchmark ;
+- documentation RNCP structurée dans `docs/`.
+
+Limites assumées : pas d'inscription publique/récupération de mot de passe, pas de déploiement cloud de production, pas de coaching médical, import synchrone uniquement. La configuration par défaut et le compte démo sont réservés au développement local.
+
+## Démarrage en cinq minutes
 
 ### Prérequis
 
-- Docker Desktop ou Docker Engine récent
-- Docker Compose
-- Git
+- Git ;
+- Docker Desktop ou Docker Engine avec `docker compose` ;
+- ports 5173, 8000, 5432 et 8025 disponibles ;
+- Python 3 pour la vérification complète (smoke et benchmark) ; non requis pour simplement utiliser la stack Docker.
 
-### Installation
+### Windows PowerShell
+
+```powershell
+git clone https://github.com/NeptuneOff/SkillTrack.git
+Set-Location SkillTrack
+Copy-Item .env.example .env
+docker compose up --build -d
+docker compose ps
+```
+
+Ou utiliser :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\setup.ps1
+```
+
+### Linux/macOS
 
 ```bash
 git clone https://github.com/NeptuneOff/SkillTrack.git
 cd SkillTrack
 cp .env.example .env
-docker compose up --build
+docker compose up --build -d
+docker compose ps
 ```
 
-Services disponibles :
+Ou utiliser `./scripts/setup.sh`.
 
-- Frontend : http://localhost:5173
-- API : http://localhost:8000
-- Swagger : http://localhost:8000/docs
-- Healthcheck : http://localhost:8000/health
-- Base PostgreSQL : localhost:5432
-- MailHog SMTP de test : http://localhost:8025
+Attendre que `db` et `backend` soient sains, puis ouvrir :
 
-Compte de démonstration créé par le seed :
+| Service | Adresse |
+|---|---|
+| Application | http://localhost:5173 |
+| API Swagger | http://localhost:8000/docs |
+| Santé API | http://localhost:8000/health |
+| MailHog (développement) | http://localhost:8025 |
 
-- Email : demo@skilltrack.local
-- Mot de passe : DemoPassword123!
+Compte local de démonstration :
 
-## Commandes utiles
+- e-mail : `demo@skilltrack.dev`
+- mot de passe : `DemoPassword123!`
+
+Ne jamais exposer ce compte ou les secrets de `.env.example` sur Internet.
+
+## Vérification complète
+
+Le contrôle automatisé recommandé est :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verify.ps1
+```
+
+ou :
 
 ```bash
-# Lancer tout le projet
-docker compose up --build
-
-# Exécuter les tests backend
-docker compose run --rm backend pytest -q --cov=app --cov-report=term-missing
-
-# Lint backend
-docker compose run --rm backend ruff check app tests
-
-# Tests frontend
-docker compose run --rm frontend npm test -- --run
-
-# Installation reproductible + smoke test Linux/macOS
-./scripts/setup.sh
-
-# Installation reproductible + smoke test Windows PowerShell
-./scripts/setup.ps1
+./scripts/verify.sh
 ```
+
+Contrôles principaux exécutés par le script (celui-ci valide aussi les modèles Compose, les migrations, le build production et archive des rapports) :
+
+```powershell
+docker compose exec -T backend ruff check app tests
+docker compose exec -T backend mypy app
+docker compose exec -T backend pytest -q --cov=app --cov-report=term-missing --cov-fail-under=90
+docker compose exec -T frontend npm test -- --run
+docker compose exec -T frontend npm run lint
+docker compose exec -T frontend npm run build
+docker compose --profile test run --rm e2e
+python scripts/smoke_test.py
+python scripts/performance_test.py
+```
+
+Le script exécute aussi le parcours Playwright via le profil Compose `test`. La preuve valable pour une release est la sortie associée au commit présenté, pas un ancien nombre de tests recopié dans ce fichier.
+
+Dernier contrôle complet local du 20/08/2026 sur l'état final : **PASS** — builds/health dev et production, Alembic `20260820_04`, Ruff/mypy, backend 21/21 sans warning à 92,33 %, frontend 10/10 + build, Playwright Chromium 2/2, smoke 9/9 avec nettoyage et benchmark 200/200 (p95 124,74 ms pour un seuil de 1 000 ms). Les preuves versionnables sont regroupées dans [`docs/INDEX.md`](docs/INDEX.md) ; ce résultat doit être rattaché au hash final et confirmé par la CI.
+
+## Format CSV
+
+Colonnes minimales : `date,title,exercise`. Utiliser le modèle de l'écran Import/Export ou `samples/import_workouts.csv`.
+
+```csv
+date,title,type,intensity,duration_minutes,exercise,reps,load_kg,duration_seconds,difficulty,notes
+2026-08-19,Push technique,Push,7,60,Tuck planche,0,0,20,7,Bon contrôle scapulaire
+```
+
+Le mapping complet, les valeurs par défaut, erreurs et contrats d'export sont documentés dans [`docs/annexes/J_import_export.md`](docs/annexes/J_import_export.md).
 
 ## Architecture
 
 ```text
-Frontend React/TypeScript
-        ↓ HTTP JSON
-Backend FastAPI
-        ↓ services métier
-Repositories SQLAlchemy
-        ↓ migrations / contraintes
-PostgreSQL
+Navigateur React/Vite
+        │ REST JSON/CSV + JWT
+        ▼
+API FastAPI ── SQLAlchemy/psycopg ── PostgreSQL 16
+        └── SMTP de développement ── MailHog
 ```
 
-Composants secondaires :
+Compose fournit les services, healthchecks et un profil E2E. Le backend reste un monolithe compact adapté au MVP, avec un port repository séparant les services métier de l'adaptateur SQLAlchemy/PostgreSQL. Alembic applique les migrations canoniques et conserve l'ancien volume. `docker-compose.prod.yml` simule un runtime multi-stage durci, validé sur une base temporaire vierge, sans être un hébergement de production. Voir [`docs/annexes/D_architecture.md`](docs/annexes/D_architecture.md) et le [journal de smoke production](artifacts/operations/2026-08-19-production-smoke.md).
 
-- MailHog pour simuler l'intégration d'un service externe de messagerie.
-- Docker Compose pour l'environnement reproductible.
-- Scripts `setup.sh` et `setup.ps1` pour automatiser l'installation et les tests de fumée.
-- GitHub Actions pour lint, tests et build.
+## Sauvegarde et arrêt
 
-## Périmètre fonctionnel MVP
+Créer une sauvegarde avant toute opération sur une base utile :
 
-- Création de compte et connexion JWT.
-- CRUD des séances d'entraînement.
-- Ajout d'exercices et séries.
-- Calculs de volume et statistiques hebdomadaires.
-- Suivi des skills de calisthénie.
-- Import CSV avec prévisualisation, rapport d'erreurs, idempotence et `ImportJob` asynchrone si le fichier dépasse le seuil.
-- Export CSV et JSON des données appartenant à l'utilisateur.
-- Tests unitaires et d'intégration.
-- Contrôles de sécurité : hash de mot de passe, filtrage par utilisateur, contraintes BDD, validation Pydantic, CORS borné.
-
-## Structure
-
-```text
-backend/              API FastAPI, services, repositories, modèles, tests
-frontend/             Application React/TypeScript
-scripts/              setup, smoke test, reset
-infra/                SQL init et scripts utiles
-docs/                 preuves RNCP, ADR, RGPD, RGAA, RSE, ITIL, qualité
-docs/evidence/        modèles de preuves à compléter pendant le projet
-.github/workflows/    CI
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\backup.ps1
 ```
 
-## Preuves RNCP préparées
+```bash
+./scripts/backup.sh
+```
 
-Le dossier `docs/` contient un système de preuves aligné avec les 36 compétences :
+Arrêt sans effacer les données :
 
-- `docs/RNCP_COVERAGE.md` : correspondance compétences → fichiers/preuves.
-- `docs/proof_matrix.csv` : matrice exploitable dans le dossier.
-- `docs/quality/PAQ.md` : plan assurance qualité.
-- `docs/security/RISK_REGISTER.md` : registre des risques.
-- `docs/privacy/RGPD_REGISTER.md` : registre RGPD.
-- `docs/accessibility/RGAA_AUDIT.md` : audit RGAA à exécuter.
-- `docs/sustainability/RSE_METRICS.md` : métriques RSE.
-- `docs/itil/INTEGRATION_PROCEDURE.md` : procédure d'intégrabilité et rollback.
-- `docs/adr/` : décisions d'architecture.
-- `docs/import_export/` : mapping CSV/JSON et exemples.
+```powershell
+docker compose down
+```
 
-Chaque preuve doit être datée, versionnée, liée à un commit et accompagnée d'un résultat réel avant la version finale.
+N'utilisez pas `docker compose down -v` : cette option supprime le volume PostgreSQL. Le runbook et le test de restauration sont dans [`docs/annexes/K_ITIL_deploiement.md`](docs/annexes/K_ITIL_deploiement.md).
 
-## Décisions techniques principales
+## Démonstration jury (12 à 15 minutes)
 
-- FastAPI pour l'API Python typée et documentée automatiquement.
-- PostgreSQL pour les contraintes, transactions, index et intégrité.
-- SQLAlchemy 2.0 pour isoler le stockage derrière des repositories.
-- React + TypeScript pour une interface maintenable.
-- Docker Compose pour une installation reproductible.
-- MailHog comme service externe local de messagerie.
-- Ruff, mypy, pytest, Vitest et GitHub Actions pour qualité et non-régression.
+1. Montrer `docker compose ps`, le healthcheck et le commit présenté.
+2. Se connecter puis expliquer les métriques issues de PostgreSQL.
+3. Créer une séance avec deux exercices, en retirer un, enregistrer, modifier et supprimer.
+4. Créer un objectif mesurable, le modifier et le terminer ; montrer la notification dans MailHog, puis le rouvrir et le supprimer.
+5. Importer le CSV exemple avec une ligne erronée et commenter le rapport.
+6. Télécharger CSV/JSON et montrer l'isolation par utilisateur.
+7. Présenter le profil, la portabilité et l'effacement sans supprimer le compte avant la fin.
+8. Ouvrir Swagger, lancer la vérification et montrer la CI du même commit.
+9. Relier les preuves aux 36 compétences via la matrice.
+10. Annoncer honnêtement les limites et les validations externes restantes.
 
-## Sécurité et confidentialité
+## Dossier RNCP
 
-- Les mots de passe sont hashés avec bcrypt.
-- Les routes métier nécessitent un JWT valide.
-- Chaque requête métier filtre par `user_id`.
-- Les imports sont validés avant insertion.
-- Les transactions évitent les insertions partielles incohérentes.
-- Les exports ne contiennent que les données du propriétaire authentifié.
-- Le registre RGPD précise les finalités, durées et droits.
+- [Index du portefeuille de preuves](docs/INDEX.md)
+- [Matrice officielle 10/13/8/5](docs/rncp/MATRICE_COMPETENCES_RNCP.md)
+- [Contrôle final](docs/rncp/CONTROLE_FINAL.md)
+- [Guide utilisateur](docs/GUIDE_UTILISATEUR.md)
+- [Cahier des charges](docs/annexes/A_cahier_des_charges.md)
+- [Architecture et ADR](docs/annexes/D_architecture.md)
+- [MCD/MPD et dictionnaire](docs/annexes/E_mcd_mpd.md)
+- [Sécurité et risques](docs/annexes/F_securite.md)
+- [Tests, recette et PV](docs/annexes/I_tests_recette.md)
+- [ITIL et exploitation](docs/annexes/K_ITIL_deploiement.md)
+- [Processus/AS-IS/TO-BE/flux](docs/annexes/P_processus_et_flux.md)
 
-## Licence
+La documentation prépare les livrables, mais ne fabrique pas les entretiens, heures, décisions collectives, validations d'entreprise ou signatures. Ces pièces doivent provenir de situations réelles.
 
-Projet pédagogique RNCP — usage de démonstration.
+## Production
+
+Avant exposition publique : secrets robustes, HTTPS/proxy, politique JWT, rate limiting, maintien/audit des lockfiles et SBOM Python, stratégie de migrations/rollback, sauvegardes supervisées, logs/alertes, relais SMTP réel, politique RGPD publiée, recette accessibilité humaine et tests de charge représentatifs.
+
+Compatibilité imposée par le projet : Node 22 dans les images frontend. Le backend utilise directement `bcrypt==5.0.0`; les mots de passe dépassant 72 octets UTF-8 sont rejetés explicitement au lieu d'être tronqués silencieusement.

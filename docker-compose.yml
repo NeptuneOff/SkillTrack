@@ -1,59 +1,102 @@
+name: skilltrack
+
 services:
   db:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-skilltrack}
       POSTGRES_USER: ${POSTGRES_USER:-skilltrack}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skilltrack}
+      POSTGRES_DB: ${POSTGRES_DB:-skilltrack}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./infra/sql:/docker-entrypoint-initdb.d:ro
+      - ./infra/postgres/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-skilltrack} -d ${POSTGRES_DB:-skilltrack}"]
       interval: 5s
       timeout: 5s
-      retries: 20
-
-  mailhog:
-    image: mailhog/mailhog:v1.0.1
-    ports:
-      - "1025:1025"
-      - "8025:8025"
+      retries: 10
+      start_period: 5s
+    stop_grace_period: 30s
 
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      target: development
     env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-skilltrack}:${POSTGRES_PASSWORD:-skilltrack}@db:5432/${POSTGRES_DB:-skilltrack}
     ports:
-      - "8000:8000"
-    volumes:
-      - ./backend:/app
+      - "${BACKEND_PORT:-8000}:8000"
+    init: true
+    restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
       mailhog:
         condition: service_started
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+    volumes:
+      - ./backend/app:/app/app
+      - ./backend/tests:/app/tests
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
-      retries: 20
+      retries: 10
+      start_period: 15s
 
   frontend:
-    build: ./frontend
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    build:
+      context: ./frontend
+      target: development
     environment:
-      VITE_API_URL: http://localhost:8000
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    init: true
+    restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
-    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:5173/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  e2e:
+    image: mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION:-1.62.1}-noble
+    profiles: [test]
+    working_dir: /workspace
+    environment:
+      CI: ${CI:-}
+      PLAYWRIGHT_BASE_URL: http://frontend:5173
+      PLAYWRIGHT_BROWSER_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      PLAYWRIGHT_API_URL: http://backend:8000
+      PLAYWRIGHT_API_PROXY_URL: http://backend:8000
+    volumes:
+      - ./frontend:/workspace
+      - e2e_node_modules:/workspace/node_modules
+    depends_on:
+      frontend:
+        condition: service_healthy
+    init: true
+    ipc: host
+    command: ["sh", "-c", "npm ci && npm run test:e2e"]
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    restart: unless-stopped
+    ports:
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
 
 volumes:
   postgres_data:
+  e2e_node_modules:

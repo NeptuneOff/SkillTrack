@@ -1,0 +1,3 @@
+-- The application schema, constraints, indexes and triggers are versioned by
+-- Alembic in backend/app/alembic. This init hook is deliberately side-effect
+-- free so a fresh database and an upgraded database follow the same path.
