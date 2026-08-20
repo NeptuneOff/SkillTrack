@@ -40,8 +40,8 @@ def create_workout(repository: SkillTrackRepository, user: User, data: WorkoutIn
         duration_minutes=data.duration_minutes,
         notes=data.notes,
     )
-    for s in data.sets:
-        w.sets.append(TrainingSet(**s.model_dump()))
+    for position, s in enumerate(data.sets):
+        w.sets.append(TrainingSet(position=position, **s.model_dump()))
     repository.add(w)
     repository.commit()
     repository.refresh(w)
@@ -53,8 +53,8 @@ def update_workout(repository: SkillTrackRepository, w: Workout, data: WorkoutIn
         setattr(w, k, v)
     w.sets.clear()
     repository.flush()
-    for s in data.sets:
-        w.sets.append(TrainingSet(**s.model_dump()))
+    for position, s in enumerate(data.sets):
+        w.sets.append(TrainingSet(position=position, **s.model_dump()))
     repository.commit()
     repository.refresh(w)
     return w

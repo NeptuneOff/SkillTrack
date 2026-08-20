@@ -82,6 +82,8 @@ export function App() {
 
   function navigate(nextPage) {
     setPage(nextPage);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     window.requestAnimationFrame(() => contentRef.current?.focus());
   }
 
@@ -181,6 +183,11 @@ export function Login({onAuthenticated}) {
         <p className="small" id="login-help">
           Le compte de démonstration est prérempli. Tous les champs sont obligatoires.
         </p>
+        <div className="demo-credentials" aria-label="Identifiants du compte de démonstration">
+          <span>Compte démo</span>
+          <code>demo@skilltrack.dev</code>
+          <code>DemoPassword123!</code>
+        </div>
         {error && <p className="error-message" role="alert">{error}</p>}
         <label htmlFor="login-email">
           Adresse email *

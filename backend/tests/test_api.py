@@ -97,6 +97,23 @@ def workout_payload(title: str = "Séance pytest", *, training_sets: list[dict] 
     }
 
 
+def ordered_training_sets(repetitions: list[int]) -> list[dict]:
+    return [
+        {
+            "exercise": "Tractions strictes",
+            "category": "tirage",
+            "set_count": 1,
+            "reps": reps,
+            "load_kg": 0,
+            "duration_seconds": 0,
+            "difficulty": 7,
+            "assistance_kg": 0,
+            "notes": f"Série de {reps}",
+        }
+        for reps in repetitions
+    ]
+
+
 def goal_payload(skill: str = "Full planche") -> dict:
     return {
         "skill": skill,
@@ -204,6 +221,52 @@ def test_workout_create_update_remove_sets_and_delete(client: TestClient, accoun
     assert client.get(f"/workouts/{workout_id}", headers=headers).status_code == 404
 
 
+def test_training_set_order_survives_create_update_reload_and_export(client: TestClient, account_factory):
+    account = account_factory()
+    headers = auth_headers(client, account)
+    ordered_reps = [8, 7, 6]
+    payload = workout_payload("Ordre des séries", training_sets=ordered_training_sets(ordered_reps))
+
+    created = client.post("/workouts", json=payload, headers=headers)
+    assert created.status_code == 200, created.text
+    workout_id = created.json()["id"]
+    assert [training_set["reps"] for training_set in created.json()["sets"]] == ordered_reps
+
+    reloaded = client.get(f"/workouts/{workout_id}", headers=headers)
+    assert reloaded.status_code == 200, reloaded.text
+    assert [training_set["reps"] for training_set in reloaded.json()["sets"]] == ordered_reps
+
+    updated_payload = {**payload, "notes": "Ordre conservé après modification"}
+    updated = client.put(f"/workouts/{workout_id}", json=updated_payload, headers=headers)
+    assert updated.status_code == 200, updated.text
+    assert [training_set["reps"] for training_set in updated.json()["sets"]] == ordered_reps
+
+    reloaded_after_update = client.get(f"/workouts/{workout_id}", headers=headers)
+    assert reloaded_after_update.status_code == 200, reloaded_after_update.text
+    assert [training_set["reps"] for training_set in reloaded_after_update.json()["sets"]] == ordered_reps
+
+    listed = client.get("/workouts", headers=headers)
+    listed_workout = next(workout for workout in listed.json() if workout["id"] == workout_id)
+    assert [training_set["reps"] for training_set in listed_workout["sets"]] == ordered_reps
+
+    exported = client.get("/exports/json", headers=headers)
+    exported_workout = next(workout for workout in exported.json()["workouts"] if workout["id"] == workout_id)
+    assert [training_set["reps"] for training_set in exported_workout["sets"]] == ordered_reps
+
+    with SessionLocal() as db:
+        persisted = (
+            db.query(TrainingSet)
+            .filter(TrainingSet.workout_id == workout_id)
+            .order_by(TrainingSet.position.asc())
+            .all()
+        )
+        assert [(training_set.position, training_set.reps) for training_set in persisted] == [
+            (0, 8),
+            (1, 7),
+            (2, 6),
+        ]
+
+
 def test_dashboard_uses_real_set_count_and_volume(client: TestClient, account_factory):
     account = account_factory()
     headers = auth_headers(client, account)
@@ -276,6 +339,7 @@ def test_dashboard_business_logic_accepts_a_substituted_storage_port():
     workout.sets.append(
         TrainingSet(
             id=str(uuid4()),
+            position=0,
             exercise="Dips",
             category="poussée",
             set_count=4,
@@ -642,6 +706,7 @@ def test_complete_csv_export_round_trip_preserves_workouts_goals_and_audit_rows(
     target_workouts = client.get("/workouts", headers=target_headers).json()
     special = next(workout for workout in target_workouts if workout["title"] == "=2+2")
     assert special["notes"] == special_payload["notes"]
+    assert [training_set["exercise"] for training_set in special["sets"]] == ["Dips, stricts", "Planche hold"]
     assert special["sets"][0]["set_count"] == 4
     assert special["sets"][0]["assistance_kg"] == 1.5
     assert special["sets"][0]["notes"] == "Ligne 1\nLigne 2"
@@ -688,7 +753,7 @@ def test_postgresql_schema_has_migration_constraints_indexes_and_business_trigge
         pytest.skip("Preuve d'intégration réservée à PostgreSQL")
     inspector = inspect(engine)
     with engine.connect() as connection:
-        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "20260819_03"
+        assert connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "20260820_04"
         assert connection.execute(
             text("SELECT 1 FROM pg_trigger WHERE tgname = 'trg_goals_completion_consistency' AND NOT tgisinternal")
         ).scalar_one() == 1
@@ -703,6 +768,14 @@ def test_postgresql_schema_has_migration_constraints_indexes_and_business_trigge
     assert "ck_import_jobs_ignored_rows" in import_checks
     goal_checks = {constraint["name"] for constraint in inspector.get_check_constraints("goals")}
     assert "ck_goals_completion_consistency" in goal_checks
+    training_set_columns = {column["name"]: column for column in inspector.get_columns("training_sets")}
+    assert training_set_columns["position"]["nullable"] is False
+    training_set_checks = {constraint["name"] for constraint in inspector.get_check_constraints("training_sets")}
+    assert "ck_training_sets_position" in training_set_checks
+    training_set_uniques = {
+        constraint["name"] for constraint in inspector.get_unique_constraints("training_sets")
+    }
+    assert "uq_training_sets_workout_position" in training_set_uniques
 
     account = account_factory()
     with SessionLocal() as db:

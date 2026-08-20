@@ -195,8 +195,13 @@ describe('Séances réelles', () => {
     await user.click(screen.getByRole('button', {name: 'Ajouter un exercice'}));
     expect(screen.getAllByLabelText('Nom *')).toHaveLength(2);
     await user.click(screen.getAllByRole('button', {name: 'Supprimer cet exercice'})[1]);
+    expect(screen.getByRole('dialog', {name: 'Supprimer cet exercice ?'})).toBeVisible();
+    await user.click(screen.getByRole('button', {name: 'Supprimer l’exercice'}));
     expect(screen.getAllByLabelText('Nom *')).toHaveLength(1);
-    expect(window.confirm).toHaveBeenCalledWith('Supprimer l’exercice 2 de cette séance ?');
+
+    await user.type(screen.getByLabelText('Nom *'), 'Tuck planche');
+    await user.click(screen.getByRole('button', {name: 'Ajouter une série'}));
+    expect(screen.getAllByLabelText('Répétitions')).toHaveLength(2);
 
     await user.clear(screen.getByLabelText('Titre *'));
     await user.type(screen.getByLabelText('Titre *'), 'Séance créée');
@@ -217,6 +222,8 @@ describe('Séances réelles', () => {
 
     card = screen.getByRole('heading', {name: 'Séance modifiée'}).closest('article');
     await user.click(within(card).getByRole('button', {name: 'Supprimer la séance Séance modifiée'}));
+    expect(screen.getByRole('dialog', {name: 'Supprimer cette séance ?'})).toBeVisible();
+    await user.click(screen.getByRole('button', {name: 'Supprimer définitivement'}));
     await waitFor(() => expect(screen.queryByRole('heading', {name: 'Séance modifiée'})).not.toBeInTheDocument());
     expect(api).toHaveBeenCalledWith('/workouts/workout-created', {method: 'DELETE'});
   });
@@ -251,7 +258,7 @@ describe('Objectifs réels', () => {
     await user.click(screen.getByRole('button', {name: 'Objectifs'}));
     expect(await screen.findByRole('heading', {name: 'Mes objectifs'})).toBeVisible();
 
-    await user.type(screen.getByLabelText('Skill ou exercice *'), 'Front lever');
+    await user.type(screen.getByLabelText(/Nom de l’objectif \/ skill ou exercice/), 'Front lever');
     await user.type(screen.getByLabelText('Description de la cible *'), 'Tenir 8 secondes');
     await user.click(screen.getByRole('button', {name: 'Ajouter l’objectif'}));
     expect(await screen.findByRole('heading', {name: /Front lever/})).toBeVisible();
@@ -270,6 +277,8 @@ describe('Objectifs réels', () => {
     expect(within(card).getByText(/terminé/)).toBeVisible();
 
     await user.click(within(card).getByRole('button', {name: 'Supprimer'}));
+    expect(screen.getByRole('dialog', {name: 'Supprimer cet objectif ?'})).toBeVisible();
+    await user.click(screen.getByRole('button', {name: 'Supprimer définitivement'}));
     expect(await screen.findByRole('heading', {name: 'Aucun objectif'})).toBeVisible();
     expect(api).toHaveBeenCalledWith('/goals/goal-created', {method: 'DELETE'});
   });
@@ -332,7 +341,9 @@ describe('Import, export et profil', () => {
       {type: 'text/csv'},
     );
     await user.upload(screen.getByLabelText('Fichier CSV UTF-8'), file);
-    expect(await screen.findByRole('heading', {name: 'Rapport du dernier import'})).toBeVisible();
+    expect(document.querySelector('#csv-file-selection')).toHaveTextContent('jury.csv');
+    await user.click(screen.getByRole('button', {name: 'Importer le fichier'}));
+    expect(await screen.findByRole('heading', {name: /Import terminé/})).toBeVisible();
     expect(screen.getAllByText('Ligne 3 : date invalide')).toHaveLength(2);
     expect(await screen.findByRole('rowheader', {name: 'jury.csv'})).toBeVisible();
 
@@ -367,8 +378,8 @@ describe('Import, export et profil', () => {
     await user.click(screen.getByRole('button', {name: 'Exporter mes données'}));
     expect(api).toHaveBeenCalledWith('/exports/json', {download: true});
     await user.click(screen.getByRole('button', {name: 'Supprimer mon compte et mes données'}));
-
-    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('action est irréversible'));
+    expect(screen.getByRole('dialog', {name: 'Supprimer mon compte et mes données ?'})).toBeVisible();
+    await user.click(screen.getByRole('button', {name: 'Supprimer définitivement'}));
     expect(await screen.findByRole('heading', {name: 'Connexion'})).toBeVisible();
     expect(api).toHaveBeenCalledWith('/users/me', {method: 'DELETE'});
   });

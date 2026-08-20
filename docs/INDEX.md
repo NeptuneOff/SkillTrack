@@ -50,7 +50,8 @@ Point d'entrée jury : [`rncp/MATRICE_COMPETENCES_RNCP.md`](rncp/MATRICE_COMPETE
 |---|---|
 | [Playwright jury + accessibilité](../artifacts/accessibility/2026-08-19-playwright.md) | 2/2 scénarios Chromium, axe/clavier/reflow et parcours jury |
 | [Audit navigateur détaillé](../artifacts/accessibility/2026-08-19-browser-audit.md) | règles axe par vue, écarts détectés puis corrigés |
-| [Benchmark du verify final](../artifacts/performance/2026-08-19-verify-final.json) | 200/200, p95 et environnement machine |
+| [`annexes/V_captures_interface.md`](annexes/V_captures_interface.md) | index P01–P32 des vues et interactions réelles, avec distinction entre preuve d’interface et validation technique |
+| [Benchmark du verify final](../artifacts/performance/2026-08-20-rncp-captures-final.json) | 200/200, p95 et environnement machine |
 | [Sauvegarde/restauration](../artifacts/operations/2026-08-19-backup-restore.md) | dump restauré dans une base temporaire puis contrôlé |
 | [Smoke de la stack production](../artifacts/operations/2026-08-19-production-smoke.md) | images, migrations, proxy, JWT et nettoyage isolé |
 

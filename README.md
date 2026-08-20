@@ -101,7 +101,7 @@ python scripts/performance_test.py
 
 Le script exécute aussi le parcours Playwright via le profil Compose `test`. La preuve valable pour une release est la sortie associée au commit présenté, pas un ancien nombre de tests recopié dans ce fichier.
 
-Dernier contrôle complet local du 19/08/2026 sur l'état final : **PASS** — builds/health dev et production, Alembic `20260819_03`, Ruff/mypy, backend 20/20 sans warning à 92,32 %, frontend 10/10 + build, Playwright Chromium 2/2, smoke 9/9 avec nettoyage et benchmark 200/200 (p95 128,05 ms pour un seuil de 1 000 ms). Les preuves versionnables sont regroupées dans [`docs/INDEX.md`](docs/INDEX.md) ; ce résultat doit être rattaché au hash final et confirmé par la CI.
+Dernier contrôle complet local du 20/08/2026 sur l'état final : **PASS** — builds/health dev et production, Alembic `20260820_04`, Ruff/mypy, backend 21/21 sans warning à 92,33 %, frontend 10/10 + build, Playwright Chromium 2/2, smoke 9/9 avec nettoyage et benchmark 200/200 (p95 124,74 ms pour un seuil de 1 000 ms). Les preuves versionnables sont regroupées dans [`docs/INDEX.md`](docs/INDEX.md) ; ce résultat doit être rattaché au hash final et confirmé par la CI.
 
 ## Format CSV
 

@@ -3,7 +3,19 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from uuid import uuid4
 
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db import Base
@@ -56,7 +68,10 @@ class Workout(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utc_now_naive)
     owner: Mapped[User] = relationship(back_populates="workouts")
     sets: Mapped[list[TrainingSet]] = relationship(
-        back_populates="workout", cascade="all, delete-orphan", passive_deletes=True
+        back_populates="workout",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+        order_by=lambda: (TrainingSet.position, TrainingSet.id),
     )
 
 
@@ -69,10 +84,13 @@ class TrainingSet(Base):
         CheckConstraint("duration_seconds BETWEEN 0 AND 86400", name="ck_training_sets_duration_seconds"),
         CheckConstraint("difficulty BETWEEN 1 AND 10", name="ck_training_sets_difficulty"),
         CheckConstraint("assistance_kg BETWEEN 0 AND 1000", name="ck_training_sets_assistance_kg"),
+        CheckConstraint("position >= 0", name="ck_training_sets_position"),
+        UniqueConstraint("workout_id", "position", name="uq_training_sets_workout_position"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=uid)
     workout_id: Mapped[str] = mapped_column(ForeignKey("workouts.id", ondelete="CASCADE"), index=True)
+    position: Mapped[int] = mapped_column(Integer)
     exercise: Mapped[str] = mapped_column(String(160))
     category: Mapped[str] = mapped_column(String(40), default="autre")
     set_count: Mapped[int] = mapped_column(Integer, default=1)

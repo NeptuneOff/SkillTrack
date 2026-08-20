@@ -23,7 +23,7 @@ La démarche couvre le MVP local : frontend, API, PostgreSQL, images Docker et d
 |---|---:|---:|---|
 | Bundle JS/CSS gzip | JS 70 154 octets + CSS 2 485 octets (build du 19/08) | suivre et éviter +10 % sans justification | fichiers `frontend/dist/assets` mesurés en mémoire |
 | Requêtes dashboard initial | à mesurer | ≤ 5 utiles | HAR DevTools |
-| p95 dashboard, 20 utilisateurs | 128,05 ms au verify final le 19/08/2026 | < 1 000 ms | `artifacts/performance/2026-08-19-verify-final.json` |
+| p95 dashboard, 20 utilisateurs | 124,74 ms au verify final le 20/08/2026 | < 1 000 ms | `artifacts/performance/2026-08-20-rncp-captures-final.json` |
 | Erreurs benchmark | 0/200 | < 1 % | même artefact |
 | Taille images Docker | à mesurer | tendance stable ou baisse | `docker image ls` export daté |
 | CPU/RAM au repos et sous test | à mesurer | baseline puis régression <20 % | `docker stats --no-stream` |

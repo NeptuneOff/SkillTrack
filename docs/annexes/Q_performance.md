@@ -22,20 +22,20 @@ Commande indicative après démarrage de Compose :
 python scripts/performance_test.py
 ```
 
-## 3. Résultat final de la release candidate du 19/08/2026
+## 3. Résultat final de la release candidate du 20/08/2026
 
 | Paramètre/mesure | Valeur |
 |---|---:|
 | Utilisateurs concurrents simulés | 20 |
 | Requêtes dashboard | 200 |
 | Succès | 100 % |
-| p95 | 128,05 ms |
-| médiane / p99 / maximum | 103,81 / 143,92 / 153,41 ms |
-| Débit | 186,53 requêtes/s |
+| p95 | 124,74 ms |
+| médiane / p99 / maximum | 100,02 / 142,94 / 176,43 ms |
+| Débit | 192,09 requêtes/s |
 | Seuil p95 | 1 000 ms |
 | Verdict | conforme aux deux seuils |
 
-Source versionnable ultime : `artifacts/performance/2026-08-19-verify-final.json`, avec les mêmes données que le résultat `latest.json` produit par le dernier `scripts/verify.ps1` après le rebuild et le remplacement de Passlib par bcrypt direct. Les fichiers antérieurs sont conservés comme historique, mais une comparaison de tendance exige le même commit, le même dataset et la même machine.
+Source versionnable ultime : `artifacts/performance/2026-08-20-rncp-captures-final.json`, avec les mêmes données que le résultat `latest.json` produit par le dernier `scripts/verify.ps1` après le rebuild du lot de captures RNCP. Les fichiers antérieurs sont conservés comme historique, mais une comparaison de tendance exige le même commit, le même dataset et la même machine.
 
 ## 4. Analyse de capacité
 

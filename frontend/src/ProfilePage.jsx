@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {Download, Trash2} from 'lucide-react';
 import {api} from './api';
-import {ErrorState, Header, Loader} from './ui';
+import {ConfirmDialog, ErrorState, Header, Loader} from './ui';
 
 function formatDate(value) {
   if (!value) return 'Non renseignée';
@@ -17,6 +17,8 @@ export default function ProfilePage({setToast, onLogout}) {
   const [error, setError] = useState('');
   const [exporting, setExporting] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [exportFeedback, setExportFeedback] = useState('');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,9 +39,13 @@ export default function ProfilePage({setToast, onLogout}) {
   async function exportData() {
     setExporting(true);
     setError('');
+    setExportFeedback('');
     try {
       await api('/exports/json', {download: true});
-      setToast('Archive personnelle téléchargée');
+      setExportFeedback(
+        'Export terminé : un fichier JSON de vos données personnelles a été téléchargé.',
+      );
+      setToast('Fichier de données personnelles téléchargé');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -48,14 +54,11 @@ export default function ProfilePage({setToast, onLogout}) {
   }
 
   async function deleteAccount() {
-    const accepted = window.confirm(
-      'Supprimer définitivement votre compte, vos séances, vos objectifs et vos imports ? Cette action est irréversible.',
-    );
-    if (!accepted) return;
     setDeleting(true);
     setError('');
     try {
       await api('/users/me', {method: 'DELETE'});
+      setDeleteDialogOpen(false);
       onLogout('Compte et données supprimés');
     } catch (err) {
       setError(err.message);
@@ -91,10 +94,14 @@ export default function ProfilePage({setToast, onLogout}) {
               <dd>{formatDate(user.created_at)}</dd>
             </div>
           </dl>
-          <p>
-            Vous disposez d’un droit d’accès, de portabilité et d’effacement de vos données.
-            L’export JSON permet d’en obtenir une copie.
-          </p>
+          <section className="rgpd-notice" aria-labelledby="rgpd-rights-title">
+            <h3 id="rgpd-rights-title">Vos données et vos droits RGPD</h3>
+            <ul>
+              <li><b>Accès et portabilité :</b> l’export JSON contient votre profil, vos séances, vos objectifs et vos historiques d’import.</li>
+              <li><b>Effacement :</b> la suppression du compte efface définitivement ces données après confirmation.</li>
+              <li><b>Confidentialité :</b> les opérations sont limitées au compte connecté par authentification JWT.</li>
+            </ul>
+          </section>
           <div className="actions profile-actions">
             <button type="button" onClick={exportData} disabled={exporting || deleting}>
               <Download aria-hidden="true" />
@@ -103,15 +110,36 @@ export default function ProfilePage({setToast, onLogout}) {
             <button
               type="button"
               className="danger"
-              onClick={deleteAccount}
+              onClick={() => setDeleteDialogOpen(true)}
               disabled={deleting || exporting}
             >
               <Trash2 aria-hidden="true" />
               {deleting ? 'Suppression…' : 'Supprimer mon compte et mes données'}
             </button>
           </div>
+          {exportFeedback && (
+            <p id="profile-export-feedback" className="import-report" role="status">
+              {exportFeedback}
+            </p>
+          )}
         </section>
       )}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        title="Supprimer mon compte et mes données ?"
+        confirmLabel="Supprimer définitivement"
+        onConfirm={deleteAccount}
+        onCancel={() => {
+          if (!deleting) setDeleteDialogOpen(false);
+        }}
+        busy={deleting}
+      >
+        <p>
+          Vos séances, objectifs, historiques d’import et informations de profil seront supprimés.
+          Cette action est irréversible. Exportez d’abord vos données si vous souhaitez en conserver
+          une copie.
+        </p>
+      </ConfirmDialog>
     </>
   );
 }

@@ -77,9 +77,10 @@ def seed_demo_data(db: Session, user: User) -> None:
             duration_minutes=75,
             notes="Données de démonstration",
         )
-        for exercise, reps, load, duration, difficulty in training_sets:
+        for position, (exercise, reps, load, duration, difficulty) in enumerate(training_sets):
             workout.sets.append(
                 TrainingSet(
+                    position=position,
                     exercise=exercise,
                     category="autre",
                     set_count=1,
@@ -405,7 +406,10 @@ def import_csv(
     objects: list[Workout | Goal | ImportJob] = []
     for data in plan.workouts:
         workout = Workout(owner_id=user.id, **data.model_dump(exclude={"sets"}))
-        workout.sets.extend(TrainingSet(**training_set.model_dump()) for training_set in data.sets)
+        workout.sets.extend(
+            TrainingSet(position=position, **training_set.model_dump())
+            for position, training_set in enumerate(data.sets)
+        )
         objects.append(workout)
     objects.extend(Goal(owner_id=user.id, **data.model_dump()) for data in plan.goals)
     job = ImportJob(

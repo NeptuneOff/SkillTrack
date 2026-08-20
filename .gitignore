@@ -19,3 +19,6 @@ artifacts/validation/
 artifacts/ci/
 frontend/playwright-report/
 frontend/test-results/
+
+/docs/rncp/CONTROLE_FINAL.md
+/docs/rncp/MATRICE_COMPETENCES_RNCP.md

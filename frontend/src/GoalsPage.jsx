@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {CheckCircle, Pencil, Trash2} from 'lucide-react';
 import {api} from './api';
-import {EmptyState, ErrorState, Header, Loader} from './ui';
+import {ConfirmDialog, EmptyState, ErrorState, Header, Loader} from './ui';
 
 const emptyGoal = {
   skill: '',
@@ -34,6 +34,7 @@ export default function GoalsPage({setToast}) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [busyId, setBusyId] = useState('');
+  const [goalToDelete, setGoalToDelete] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -103,6 +104,7 @@ export default function GoalsPage({setToast}) {
         method: 'PUT',
         body: JSON.stringify({
           ...values,
+          current_value: completed ? goal.target_value : goal.current_value,
           status: completed ? 'termine' : 'actif',
           is_done: completed,
         }),
@@ -116,14 +118,16 @@ export default function GoalsPage({setToast}) {
     }
   }
 
-  async function remove(goal) {
-    if (!window.confirm(`Supprimer définitivement l’objectif « ${goal.skill} » ?`)) return;
+  async function remove() {
+    if (!goalToDelete) return;
+    const goal = goalToDelete;
     setBusyId(goal.id);
     setError('');
     try {
       await api(`/goals/${goal.id}`, {method: 'DELETE'});
       if (editingId === goal.id) resetForm();
       await load();
+      setGoalToDelete(null);
       setToast('Objectif supprimé');
     } catch (err) {
       setError(err.message);
@@ -146,11 +150,12 @@ export default function GoalsPage({setToast}) {
           Exemple : « Tenir une full planche 5 secondes ». Les champs marqués * sont obligatoires.
         </p>
         {error && <p role="alert" className="error-message">{error}</p>}
-        <div className="fields">
+        <div className="fields goal-fields">
           <label htmlFor="goal-skill">
-            Skill ou exercice *
+            Nom de l’objectif / skill ou exercice *
             <input
               id="goal-skill"
+              aria-describedby="goal-skill-help"
               required
               minLength="2"
               maxLength="120"
@@ -158,6 +163,9 @@ export default function GoalsPage({setToast}) {
               value={form.skill}
               onChange={(event) => change('skill', event.target.value)}
             />
+            <span className="small" id="goal-skill-help">
+              Ce nom sera affiché dans la liste et sur le suivi de progression.
+            </span>
           </label>
           <label htmlFor="goal-type">
             Type *
@@ -204,7 +212,7 @@ export default function GoalsPage({setToast}) {
             />
           </label>
         </div>
-        <div className="fields">
+        <div className="fields goal-fields">
           <label htmlFor="goal-current-value">
             Valeur actuelle
             <input
@@ -309,10 +317,13 @@ export default function GoalsPage({setToast}) {
               Math.max(0, Math.round((goal.current_value / goal.target_value) * 100)),
             );
             return (
-              <article className="goal" key={goal.id}>
+              <article className={`goal goal-${goal.status}`} key={goal.id}>
                 <div>
                   <h3>
-                    {goal.skill} <small>· {statusLabels[goal.status] || goal.status}</small>
+                    {goal.skill}{' '}
+                    <span className={`status-badge status-${goal.status}`}>
+                      {statusLabels[goal.status] || goal.status}
+                    </span>
                   </h3>
                   <p>
                     {goal.current_level || 'Départ non renseigné'} → {goal.target}
@@ -350,7 +361,7 @@ export default function GoalsPage({setToast}) {
                   <button
                     type="button"
                     className="danger"
-                    onClick={() => remove(goal)}
+                    onClick={() => setGoalToDelete(goal)}
                     disabled={busyId === goal.id}
                   >
                     <Trash2 aria-hidden="true" />
@@ -366,6 +377,21 @@ export default function GoalsPage({setToast}) {
           </EmptyState>
         )}
       </section>
+      <ConfirmDialog
+        open={Boolean(goalToDelete)}
+        title="Supprimer cet objectif ?"
+        confirmLabel="Supprimer définitivement"
+        onConfirm={remove}
+        onCancel={() => {
+          if (!busyId) setGoalToDelete(null);
+        }}
+        busy={Boolean(goalToDelete && busyId === goalToDelete.id)}
+      >
+        <p>
+          L’objectif « {goalToDelete?.skill} » et sa progression seront supprimés définitivement.
+          Cette action est irréversible.
+        </p>
+      </ConfirmDialog>
     </>
   );
 }

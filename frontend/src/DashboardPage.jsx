@@ -52,7 +52,29 @@ export default function DashboardPage() {
             <Metric label="Volume" value={data.total_volume ?? 0} />
             <Metric label="Durée totale" value={data.total_duration_minutes ?? 0} suffix=" min" />
             <Metric label="Intensité moyenne" value={data.average_intensity ?? 0} suffix="/10" />
+            <Metric label="Objectifs actifs" value={data.goals?.length ?? 0} />
             <Metric label="Progression récente" value={data.recent_progress_percent ?? 0} suffix=" %" />
+          </section>
+
+          <section className="card dashboard-latest" aria-labelledby="latest-workout-title">
+            <div>
+              <p className="eyebrow">Dernière activité</p>
+              <h2 id="latest-workout-title">Dernière séance</h2>
+            </div>
+            {data.last_workout ? (
+              <div className="latest-workout-summary">
+                <div>
+                  <b>{data.last_workout.title}</b>
+                  <span>{data.last_workout.type} · {data.last_workout.date}</span>
+                </div>
+                <div>
+                  <b>{data.last_workout.duration_minutes} min</b>
+                  <span>RPE {data.last_workout.intensity}/10 · volume {data.last_workout.volume ?? 0}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="small">Aucune séance enregistrée pour le moment.</p>
+            )}
           </section>
 
           <div className="cols">

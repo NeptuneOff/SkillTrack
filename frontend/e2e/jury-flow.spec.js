@@ -47,9 +47,12 @@ test('parcours jury : authentification, CRUD, import, export et profil', async (
 
     await page.getByRole('button', {name: 'Séances'}).click();
     await page.getByLabel('Titre *').fill(workoutTitle);
+    await page.getByLabel('Nom *').fill('Tuck planche hold');
+    await page.getByRole('button', {name: 'Ajouter une série'}).click();
+    await page.getByLabel('Durée (secondes)').nth(0).fill('15');
+    await page.getByLabel('Durée (secondes)').nth(1).fill('12');
     await page.getByRole('button', {name: 'Ajouter un exercice'}).click();
     await page.getByLabel('Nom *').nth(1).fill('Tractions lestées');
-    await page.getByLabel('Séries *').nth(1).fill('3');
     await page.getByLabel('Répétitions').nth(1).fill('5');
     await page.getByRole('button', {name: 'Enregistrer la séance'}).click();
     let workout = page.locator('article.workout').filter({hasText: workoutTitle});
@@ -62,7 +65,7 @@ test('parcours jury : authentification, CRUD, import, export et profil', async (
     await expect(workout).toBeVisible();
 
     await page.getByRole('button', {name: 'Objectifs'}).click();
-    await page.getByLabel('Skill ou exercice *').fill(goalSkill);
+    await page.getByLabel(/Nom de l’objectif \/ skill ou exercice/).fill(goalSkill);
     await page.getByLabel('Description de la cible *').fill('Tenir 8 secondes');
     await page.getByRole('button', {name: 'Ajouter l’objectif'}).click();
     let goal = page.locator('article.goal').filter({hasText: goalSkill});
@@ -84,7 +87,8 @@ test('parcours jury : authentification, CRUD, import, export et profil', async (
         'utf-8',
       ),
     });
-    await expect(page.getByRole('heading', {name: 'Rapport du dernier import'})).toBeVisible();
+    await page.getByRole('button', {name: 'Importer le fichier'}).click();
+    await expect(page.getByRole('heading', {name: /Import terminé/})).toBeVisible();
     await expect(page.getByText('1 ligne(s) importée(s)')).toBeVisible();
     await expect(page.getByRole('rowheader', {name: `jury-${suffix}.csv`})).toBeVisible();
 
@@ -108,15 +112,15 @@ test('parcours jury : authentification, CRUD, import, export et profil', async (
     await page.getByRole('button', {name: 'Séances'}).click();
     for (const title of [updatedWorkoutTitle, importedWorkoutTitle]) {
       const card = page.locator('article.workout').filter({hasText: title});
-      page.once('dialog', (dialog) => dialog.accept());
       await card.getByRole('button', {name: `Supprimer la séance ${title}`}).click();
+      await page.getByRole('button', {name: 'Supprimer définitivement'}).click();
       await expect(card).toHaveCount(0);
     }
 
     await page.getByRole('button', {name: 'Objectifs'}).click();
     goal = page.locator('article.goal').filter({hasText: goalSkill});
-    page.once('dialog', (dialog) => dialog.accept());
     await goal.getByRole('button', {name: 'Supprimer'}).click();
+    await page.getByRole('button', {name: 'Supprimer définitivement'}).click();
     await expect(goal).toHaveCount(0);
   } finally {
     await cleanupCreatedData(page, String(suffix));

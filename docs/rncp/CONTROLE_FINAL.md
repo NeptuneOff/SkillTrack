@@ -4,7 +4,9 @@
 
 Exécuter cette grille sur le **commit exact présenté**, après reconstruction des images. `✅` signifie preuve disponible et vérifiée ; `🟠` signifie contrôle final ou preuve humaine requis ; `❌` signifie bloquant. Ne pas transformer automatiquement `🟠` en `✅` après une modification de code.
 
-| # | Contrôle demandé | Preuve de sortie | État documentaire au 19/08/2026 |
+Les 32 états d’interface du parcours jury sont indexés dans [`../annexes/V_captures_interface.md`](../annexes/V_captures_interface.md). Cette annexe atteste les vues et interactions visibles ; les validations techniques et humaines restent celles indiquées dans la grille.
+
+| # | Contrôle demandé | Preuve de sortie | État documentaire au 20/08/2026 |
 |---|---|---|---|
 | 1 | Utilisable sans explication orale | test utilisateur + parcours README | 🟠 test externe requis |
 | 2 | Toutes les pages visibles ont une vraie interface | connexion/dashboard/séances/objectifs/import/profil | ✅ six vues contrôlées par Vitest/axe et Playwright |
@@ -21,11 +23,17 @@ Exécuter cette grille sur le **commit exact présenté**, après reconstruction
 | 13 | PostgreSQL réellement utilisé | service, psycopg, données persistantes | ✅ |
 | 14 | Docker Compose fonctionne | services healthy après rebuild | ✅ stack dev et simulation production isolée validées ; répéter sur machine jury |
 | 15 | README permet un lancement autonome | clone/machine vierge sans assistance | 🟠 test externe/machine vierge requis |
-| 16 | Tests couvrent fonctions principales | matrice `I_tests_recette.md`, CI | ✅ backend 20/20 à 92,32 %, frontend 10/10, E2E jury + accessibilité ; recette humaine distincte |
+| 16 | Tests couvrent fonctions principales | matrice `I_tests_recette.md`, CI | ✅ backend 21/21 à 92,33 %, frontend 10/10, E2E jury + accessibilité ; recette humaine distincte |
 | 17 | Documentation RNCP existe | annexes et matrice | ✅ |
 | 18 | Matrice indique les preuves par compétence | 36 lignes, 10/13/8/5, chemins/statuts | ✅ |
 | 19 | Matière pour défendre les 4 blocs | portfolio + preuves externes | 🟠 technique solide ; BC02 externe incomplet |
 | 20 | Limites restantes signalées honnêtement | README, matrice et annexes | ✅ |
+
+## Lecture RNCP des captures
+
+L’annexe V complète les preuves déjà démontrées pour **BC01-C1, BC01-C2, BC01-C5, BC01-C7, BC03-C7, BC04-C3 et BC04-C4**. Elle relie chaque fichier P01–P32 à l’interaction qui produit l’état observé et à sa validation technique complémentaire. Elle ne change pas le bilan global de la matrice : **26 démontrées, 2 partielles et 8 externes requises**.
+
+Les captures ne remplacent aucune des huit preuves externes : un cas réel d’entreprise, les validations de tiers, la coordination et les interactions authentifiées doivent toujours être joints séparément.
 
 ## Procédure technique
 
@@ -51,7 +59,7 @@ Go technique lorsque tous les contrôles automatisés et REC critiques sont vert
 
 - commit/tag, URL de PR et CI ;
 - sortie `verify`, `docker compose ps` et benchmark ;
-- captures des parcours, Swagger et rapports import/export ;
+- lot de captures P01–P32 indexé dans `docs/annexes/V_captures_interface.md`, documentation OpenAPI séparée et rapports import/export ;
 - rapport accessibilité ;
 - journal de sauvegarde/restauration sans dump ;
 - comptes rendus anonymisés, feedback et PV signés.

@@ -52,17 +52,17 @@ python scripts/smoke_test.py
 
 Conserver la sortie complète ou l'URL de CI, la date, le commit et l'environnement. Ne pas recopier un ancien résultat comme preuve de la release finale.
 
-Derniers résultats locaux de la branche de travail, avant rattachement au commit final, le 19/08/2026 :
+Derniers résultats locaux de la branche de travail, avant rattachement au commit final, le 20/08/2026 :
 
 | Contrôle | Résultat | Portée notable |
 |---|---|---|
-| Backend PostgreSQL | **20/20 cas passants, couverture applicative 92,32 %, zéro warning pytest** | auth, CRUD, repository substitué, non-régression seed, séries, MailHog, imports/rollback, isolation, exports/round-trip, effacement, migrations/contraintes/trigger et documentation CSP |
+| Backend PostgreSQL | **21/21 cas passants, couverture applicative 92,33 %, zéro warning pytest** | auth, CRUD, repository substitué, non-régression seed, ordre persistant des séries, MailHog, imports/rollback, isolation, exports/round-trip, effacement, migrations/contraintes/trigger et documentation CSP |
 | Frontend Vitest | **10/10 passants** | vrais composants, 401, CRUD, import/historique/exports, profil, navigation et axe |
 | Frontend qualité | **ESLint et build verts** | source et bundle de production |
 | Playwright Chromium | **2/2 scénarios passants** | jury : login/dashboard, CRUD, objectif, import/rapport, téléchargements, profil/nettoyage ; accessibilité : axe réel sur cinq vues, clavier et reflow 320 px |
 | Smoke stack réelle | **9/9 contrôles passants, nettoyage vert** | santé/en-têtes, JWT, profil/dashboard, CRUD, MailHog, exports, import partiel/rapport ; JSON local sous `artifacts/validation/` et artefact CI prévu |
-| Compose/Alembic | **dev + production builds/health verts, révision `20260819_03` en tête** | modèles Compose, images et PostgreSQL réel |
-| Performance finale | **200/200, p95 128,05 ms, seuil 1 000 ms** | 20 utilisateurs concurrents simulés ; artefact `2026-08-19-verify-final.json` |
+| Compose/Alembic | **dev + production builds/health verts, révision `20260820_04` en tête** | modèles Compose, images et PostgreSQL réel |
+| Performance finale | **200/200, p95 124,74 ms, seuil 1 000 ms** | 20 utilisateurs concurrents simulés ; artefact `2026-08-20-rncp-captures-final.json` |
 | Audit nettoyage E2E | **0 trace résiduelle** | aucun objet E2E dans `workouts`, `goals` ou `import_jobs` |
 
 Associer ces résultats au hash du commit final et à la sortie `verify`/CI dans le dossier.

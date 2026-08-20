@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 import {X} from 'lucide-react';
 
 export function Header({title, sub}) {
@@ -40,6 +40,76 @@ export function EmptyState({title, children}) {
       <h3>{title}</h3>
       <p>{children}</p>
     </div>
+  );
+}
+
+export function Dialog({open, title, children, onClose, actions, className = ''}) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const previousFocus = document.activeElement;
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    window.requestAnimationFrame(() => dialogRef.current?.focus());
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      previousFocus?.focus?.();
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div className="dialog-backdrop">
+      <section
+        className={`card dialog-card ${className}`.trim()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="dialog-title"
+        tabIndex="-1"
+        ref={dialogRef}
+      >
+        <div className="dialog-heading">
+          <h2 id="dialog-title">{title}</h2>
+          <button type="button" className="icon-button" aria-label="Fermer" onClick={onClose}>
+            <X aria-hidden="true" />
+          </button>
+        </div>
+        <div className="dialog-content">{children}</div>
+        {actions && <div className="actions dialog-actions">{actions}</div>}
+      </section>
+    </div>
+  );
+}
+
+export function ConfirmDialog({
+  open,
+  title,
+  children,
+  confirmLabel = 'Confirmer',
+  onConfirm,
+  onCancel,
+  busy = false,
+}) {
+  return (
+    <Dialog
+      open={open}
+      title={title}
+      onClose={onCancel}
+      className="confirm-dialog"
+      actions={(
+        <>
+          <button type="button" onClick={onCancel} disabled={busy}>Annuler</button>
+          <button type="button" className="danger" onClick={onConfirm} disabled={busy}>
+            {busy ? 'Suppression…' : confirmLabel}
+          </button>
+        </>
+      )}
+    >
+      {children}
+    </Dialog>
   );
 }
 
