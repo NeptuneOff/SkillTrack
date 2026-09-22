@@ -11,7 +11,7 @@
     "lint": "eslint src e2e *.config.js --max-warnings=0"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "6.0.5",
+    "@vitejs/plugin-react": "6.1.1",
     "lucide-react": "1.33.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
